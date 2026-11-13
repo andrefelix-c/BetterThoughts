@@ -32,8 +32,9 @@ function getClientTodayIso() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-function parseIsoParts(value: string) {
-  const datePart = value.slice(0, 10)
+function parseIsoParts(value: string, fallbackIso?: string) {
+  const effectiveValue = value || fallbackIso || ''
+  const datePart = effectiveValue.slice(0, 10)
   const [yStr, mStr, dStr] = datePart.split('-')
   const year = Number(yStr) || 2026
   const month = (Number(mStr) || 1) - 1 // 0-indexed
@@ -43,7 +44,8 @@ function parseIsoParts(value: string) {
   const [hStr = '12', minStr = '00'] = timePart.split(':')
 
   return {
-    datePart,
+    datePart: value ? value.slice(0, 10) : '',
+    effectiveDatePart: datePart,
     year,
     month,
     day,
@@ -75,6 +77,7 @@ export default function DatePicker({
   onChange,
   includeTime = false,
   disableFuture = false,
+  disablePast = false,
   maxIso,
   minIso,
   label,
@@ -88,6 +91,7 @@ export default function DatePicker({
   onChange: (nextValue: string) => void
   includeTime?: boolean
   disableFuture?: boolean
+  disablePast?: boolean
   maxIso?: string
   minIso?: string
   label?: string
@@ -95,8 +99,8 @@ export default function DatePicker({
   variant?: 'underline' | 'inline'
   defaultOpen?: boolean
 }) {
-  const parsed = parseIsoParts(value)
   const todayIso = useSyncExternalStore(emptySubscribe, getClientTodayIso, () => '')
+  const parsed = parseIsoParts(value, todayIso)
 
   const [isOpen, setIsOpen] = useState(defaultOpen)
   const [viewYear, setViewYear] = useState(parsed.year)
@@ -166,7 +170,9 @@ export default function DatePicker({
   }
 
   const handleTimeChange = (nextHour: string, nextMinute: string) => {
-    onChange(`${parsed.datePart}T${nextHour}:${nextMinute}`)
+    const baseDate = parsed.datePart || todayIso || parsed.effectiveDatePart
+    if (!baseDate) return
+    onChange(`${baseDate}T${nextHour}:${nextMinute}`)
   }
 
   const effectiveMaxIso =
@@ -175,6 +181,13 @@ export default function DatePicker({
         ? maxIso
         : todayIso
       : maxIso
+
+  const effectiveMinIso =
+    disablePast && todayIso
+      ? minIso && minIso > todayIso
+        ? minIso
+        : todayIso
+      : minIso
 
   return (
     <div className="relative min-w-0" ref={containerRef}>
@@ -258,7 +271,7 @@ export default function DatePicker({
               const isToday = iso === todayIso
               const isDisabled =
                 (effectiveMaxIso && iso > effectiveMaxIso) ||
-                (minIso && iso < minIso)
+                (effectiveMinIso && iso < effectiveMinIso)
 
               return (
                 <button

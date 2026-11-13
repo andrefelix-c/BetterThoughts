@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
 import prisma from '@/lib/prisma'
 import { generateSocraticReflection, type SocraticReflection } from '@/services/ai'
+import { parseLocalDateTimeWithOffset } from '@/lib/date-time'
 
 export interface SaveEntryState {
   success?: boolean
@@ -29,6 +30,7 @@ export async function createJournalEntry(
   const coreEmotion = (formData.get('core_emotion') as string)?.trim() || null
   const customEntryDateRaw = (formData.get('entry_date') as string)?.trim()
   const timezoneOffsetRaw = formData.get('timezoneOffset') as string | null
+  const triggerIdRaw = (formData.get('trigger_id') as string)?.trim() || null
 
   if (!description) {
     return { error: 'Por favor, escreva o seu relato antes de salvar.' }
@@ -36,31 +38,11 @@ export async function createJournalEntry(
 
   let customCreatedAt: Date | undefined
   if (customEntryDateRaw) {
-    const match = customEntryDateRaw.match(
-      /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/
+    const parsedDate = parseLocalDateTimeWithOffset(
+      customEntryDateRaw,
+      timezoneOffsetRaw
     )
-    if (!match) {
-      return { error: 'Data e hora do relato inválidas.' }
-    }
-
-    const [, yStr, mStr, dStr, hStr, minStr, secStr] = match
-    const offsetMinutes =
-      timezoneOffsetRaw !== null && !isNaN(Number(timezoneOffsetRaw))
-        ? Number(timezoneOffsetRaw)
-        : 180
-
-    const localAsUtcMs = Date.UTC(
-      Number(yStr),
-      Number(mStr) - 1,
-      Number(dStr),
-      Number(hStr),
-      Number(minStr),
-      secStr ? Number(secStr) : 0,
-      0
-    )
-    const parsedDate = new Date(localAsUtcMs + offsetMinutes * 60 * 1000)
-
-    if (isNaN(parsedDate.getTime())) {
+    if (!parsedDate) {
       return { error: 'Data e hora do relato inválidas.' }
     }
 
@@ -72,7 +54,7 @@ export async function createJournalEntry(
   }
 
   try {
-    // 1. Busca foco terapêutico vigente do usuário
+    // 1. Busca foco terapêutico vigente e eventual gatilho associado
     let therapeuticFocus: string | null = null
     try {
       const profile = await prisma.profile.findUnique({
@@ -84,25 +66,49 @@ export async function createJournalEntry(
       console.warn('Aviso: Não foi possível obter o foco terapêutico:', profileErr)
     }
 
+    const linkedTrigger = triggerIdRaw
+      ? await prisma.trigger.findFirst({
+          where: {
+            id: triggerIdRaw,
+            user_id: user.id,
+          },
+          select: { id: true, title: true },
+        })
+      : null
+
     // 2. Aciona a OpenAI para produzir a reflexão socrática
     const reflection = await generateSocraticReflection({
       description,
       coreEmotion,
       therapeuticFocus,
+      triggerTitle: linkedTrigger?.title,
     })
 
-    // 3. Salva a entrada e a reflexão da IA via Prisma
-    const entry = await prisma.entry.create({
-      data: {
-        user_id: user.id,
-        description,
-        core_emotion: coreEmotion,
-        ai_reflection: reflection as unknown as object,
-        ...(customCreatedAt ? { created_at: customCreatedAt } : {}),
-      },
+    // 3. Salva a entrada e resolve o gatilho vinculado em transação
+    const entry = await prisma.$transaction(async (tx) => {
+      const created = await tx.entry.create({
+        data: {
+          user_id: user.id,
+          description,
+          core_emotion: coreEmotion,
+          ai_reflection: reflection as unknown as object,
+          ...(linkedTrigger ? { trigger_id: linkedTrigger.id } : {}),
+          ...(customCreatedAt ? { created_at: customCreatedAt } : {}),
+        },
+      })
+
+      if (linkedTrigger) {
+        await tx.trigger.update({
+          where: { id: linkedTrigger.id },
+          data: { is_resolved: true },
+        })
+      }
+
+      return created
     })
 
     revalidatePath('/')
+    revalidatePath('/gatilhos')
     revalidatePath('/historico')
     revalidatePath('/resumo')
 

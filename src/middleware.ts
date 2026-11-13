@@ -61,8 +61,10 @@ export const config = {
      * - _next/static (arquivos estáticos)
      * - _next/image (otimização de imagens)
      * - favicon.ico (ícone do navegador)
+     * - sw.js e manifest.webmanifest (PWA)
+     * - api/cron/* (autenticada via CRON_SECRET)
      * - imagens comuns (.svg, .png, .jpg, etc.)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.webmanifest|api/cron/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

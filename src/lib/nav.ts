@@ -1,4 +1,5 @@
 import {
+  faBell,
   faChartBar,
   faPenToSquare,
   faSun,
@@ -15,6 +16,11 @@ export const NAV_ITEMS = [
     href: '/historico',
     label: 'Histórico',
     icon: faBookOpen,
+  },
+  {
+    href: '/gatilhos',
+    label: 'Gatilhos',
+    icon: faBell,
   },
   {
     href: '/foco',

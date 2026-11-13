@@ -1,12 +1,13 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { faCalendar, faLightbulb } from '@fortawesome/free-regular-svg-icons'
+import { faBell, faCalendar, faLightbulb } from '@fortawesome/free-regular-svg-icons'
 import {
   faCheck,
   faSpinner,
   faTriangleExclamation,
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons'
 import {
   createJournalEntry,
@@ -14,10 +15,18 @@ import {
   type SaveEntryState,
   type SaveAnswersState,
 } from '@/app/actions'
+import { resolveTriggerAction } from '@/app/gatilhos/actions'
 import { EMOTIONS } from '@/lib/emotions'
 import { BUTTON_PRIMARY, BUTTON_SECONDARY } from '@/lib/button-styles'
+import { formatLocalDateTime } from '@/lib/date-time'
 import DatePicker from './date-picker'
 import FaIcon from './fa-icon'
+
+export interface JournalTriggerPrompt {
+  id: string
+  title: string
+  event_time: string
+}
 
 function ReflectionAnswerSection({
   entryId,
@@ -124,24 +133,47 @@ function ReflectionAnswerSection({
   )
 }
 
-function formatLocalDateTime(d: Date) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const h = String(d.getHours()).padStart(2, '0')
-  const min = String(d.getMinutes()).padStart(2, '0')
-  return `${y}-${m}-${day}T${h}:${min}`
-}
-
 export default function JournalForm({
   activeFocus,
+  pendingTriggers = [],
+  initialSelectedTriggerId = null,
 }: {
   activeFocus?: string | null
+  pendingTriggers?: JournalTriggerPrompt[]
+  initialSelectedTriggerId?: string | null
 }) {
   const [selectedEmotion, setSelectedEmotion] = useState<string>('Neutro')
   const [useCustomDate, setUseCustomDate] = useState(false)
   const [customDateTime, setCustomDateTime] = useState('')
   const [tzOffset, setTzOffset] = useState(180)
+  const [selectedTriggerId, setSelectedTriggerId] = useState<string | null>(
+    initialSelectedTriggerId
+  )
+  const [dismissedTriggerIds, setDismissedTriggerIds] = useState<string[]>([])
+  const [isResolvingTrigger, startResolveTransition] = useTransition()
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
+
+  const visibleTriggers = pendingTriggers.filter(
+    (item) => !dismissedTriggerIds.includes(item.id)
+  )
+  const activeTriggerCard =
+    visibleTriggers.find((item) => item.id === selectedTriggerId) ??
+    visibleTriggers[0] ??
+    null
+  const isLinkedToActiveTrigger =
+    Boolean(activeTriggerCard) && selectedTriggerId === activeTriggerCard?.id
+
+  const handleDismissTrigger = (triggerId: string) => {
+    startResolveTransition(async () => {
+      const res = await resolveTriggerAction(triggerId)
+      if (res.success) {
+        setDismissedTriggerIds((prev) => [...prev, triggerId])
+        if (selectedTriggerId === triggerId) {
+          setSelectedTriggerId(null)
+        }
+      }
+    })
+  }
 
   const [state, formAction, isPending] = useActionState<SaveEntryState, FormData>(
     createJournalEntry,
@@ -191,6 +223,87 @@ export default function JournalForm({
 
   return (
     <form action={formAction} className="space-y-6">
+      <input type="hidden" name="trigger_id" value={selectedTriggerId || ''} />
+
+      {activeTriggerCard && (
+        <div
+          className={`rounded-2xl border p-4 space-y-2.5 transition-colors ${
+            isLinkedToActiveTrigger
+              ? 'bg-[#7B907E]/12 border-[#7B907E]/45'
+              : 'bg-[#EAE5DC]/75 border-[#DDD6CA]'
+          }`}
+        >
+          <div className="flex items-start justify-between gap-2.5">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <FaIcon
+                icon={faBell}
+                className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${
+                  isLinkedToActiveTrigger ? 'text-[#5F7362]' : 'text-[#C98A74]'
+                }`}
+              />
+              <p className="text-xs sm:text-[13px] text-[#2F3530] leading-relaxed wrap-break-word min-w-0">
+                {isLinkedToActiveTrigger ? (
+                  <>
+                    Relatando sobre: <strong>{activeTriggerCard.title}</strong>
+                  </>
+                ) : (
+                  <>
+                    Você teve <strong>{activeTriggerCard.title}</strong> recentemente. Quer
+                    relatar sobre isso agora?
+                  </>
+                )}
+              </p>
+            </div>
+
+            {!isLinkedToActiveTrigger && (
+              <button
+                type="button"
+                onClick={() => handleDismissTrigger(activeTriggerCard.id)}
+                disabled={isResolvingTrigger}
+                title="Dispensar lembrete"
+                aria-label="Dispensar lembrete"
+                className="text-[#2F3530]/40 hover:text-[#2F3530] p-1 rounded-full transition-colors cursor-pointer shrink-0 disabled:opacity-40"
+              >
+                <FaIcon icon={faXmark} className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pl-6">
+            {isLinkedToActiveTrigger ? (
+              <button
+                type="button"
+                onClick={() => setSelectedTriggerId(null)}
+                className="text-[11px] font-medium text-[#2F3530]/60 hover:text-[#2F3530] underline underline-offset-2 cursor-pointer"
+              >
+                Desvincular evento
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedTriggerId(activeTriggerCard.id)
+                    descriptionRef.current?.focus()
+                  }}
+                  className="text-xs font-medium text-[#445646] bg-[#F7F5F0] hover:bg-white border border-[#D7CFC2] px-3 py-1 rounded-full transition-colors cursor-pointer"
+                >
+                  Relatar sobre isso
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDismissTrigger(activeTriggerCard.id)}
+                  disabled={isResolvingTrigger}
+                  className="text-xs text-[#2F3530]/55 hover:text-[#2F3530] px-2 py-1 cursor-pointer disabled:opacity-40"
+                >
+                  Dispensar
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {activeFocus && (
         <div className="border-l-2 border-[#C98A74] pl-3.5 py-0.5 text-xs leading-relaxed space-y-0.5">
           <span className="font-medium text-[#2F3530]/55 block">
@@ -268,6 +381,7 @@ export default function JournalForm({
             )}
           </div>
           <textarea
+            ref={descriptionRef}
             id="description"
             name="description"
             required

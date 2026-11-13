@@ -4,12 +4,24 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import prisma from '@/lib/prisma'
 import type { Entry } from '@prisma/client'
-import JournalForm from '@/components/journal-form'
+import JournalForm, { type JournalTriggerPrompt } from '@/components/journal-form'
 import TodayDate from '@/components/today-date'
 import { getEmotionConfig } from '@/lib/emotions'
 
-async function JournalContent() {
+type HomeSearchParams = Promise<{
+  triggerId?: string | string[]
+}>
+
+async function JournalContent({
+  searchParams,
+}: {
+  searchParams: HomeSearchParams
+}) {
   await connection()
+
+  const params = await searchParams
+  const requestedTriggerId =
+    typeof params.triggerId === 'string' ? params.triggerId : null
 
   const supabase = await createClient()
   const {
@@ -18,20 +30,65 @@ async function JournalContent() {
 
   let therapeuticFocus: string | null = null
   let recentEntries: Entry[] = []
+  let pendingTriggers: JournalTriggerPrompt[] = []
+  let initialSelectedTriggerId: string | null = null
 
   if (user) {
     try {
-      const profile = await prisma.profile.findUnique({
-        where: { id: user.id },
-        select: { therapeutic_focus: true },
-      })
-      therapeuticFocus = profile?.therapeutic_focus || null
+      const [profile, entries, triggers] = await Promise.all([
+        prisma.profile.findUnique({
+          where: { id: user.id },
+          select: { therapeutic_focus: true },
+        }),
+        prisma.entry.findMany({
+          where: { user_id: user.id },
+          orderBy: { created_at: 'desc' },
+          take: 3,
+        }),
+        prisma.trigger.findMany({
+          where: {
+            user_id: user.id,
+            is_resolved: false,
+            event_time: { lte: new Date() },
+          },
+          orderBy: { event_time: 'desc' },
+          take: 5,
+        }),
+      ])
 
-      recentEntries = await prisma.entry.findMany({
-        where: { user_id: user.id },
-        orderBy: { created_at: 'desc' },
-        take: 3,
-      })
+      therapeuticFocus = profile?.therapeutic_focus || null
+      recentEntries = entries
+      pendingTriggers = triggers.map((item) => ({
+        id: item.id,
+        title: item.title,
+        event_time: item.event_time.toISOString(),
+      }))
+
+      if (requestedTriggerId) {
+        const matched = triggers.find((item) => item.id === requestedTriggerId)
+        if (matched) {
+          initialSelectedTriggerId = matched.id
+        } else {
+          const explicitTrigger = await prisma.trigger.findFirst({
+            where: {
+              id: requestedTriggerId,
+              user_id: user.id,
+              is_resolved: false,
+            },
+          })
+          if (explicitTrigger) {
+            pendingTriggers = [
+              {
+                id: explicitTrigger.id,
+                title: explicitTrigger.title,
+                event_time: explicitTrigger.event_time.toISOString(),
+              },
+              ...pendingTriggers,
+            ]
+            initialSelectedTriggerId = explicitTrigger.id
+          }
+        }
+      }
     } catch (err) {
       console.error('Erro ao consultar dados no Prisma:', err)
     }
@@ -57,7 +114,11 @@ async function JournalContent() {
           </p>
         </header>
 
-        <JournalForm activeFocus={therapeuticFocus} />
+        <JournalForm
+          activeFocus={therapeuticFocus}
+          pendingTriggers={pendingTriggers}
+          initialSelectedTriggerId={initialSelectedTriggerId}
+        />
       </div>
 
       {/* Registros recentes */}
@@ -134,7 +195,9 @@ async function JournalContent() {
   )
 }
 
-export default function HomePage() {
+export default function HomePage(props: {
+  searchParams: HomeSearchParams
+}) {
   return (
     <div className="max-w-lg md:max-w-3xl lg:max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-9">
       <Suspense
@@ -152,7 +215,7 @@ export default function HomePage() {
           </div>
         }
       >
-        <JournalContent />
+        <JournalContent searchParams={props.searchParams} />
       </Suspense>
     </div>
   )

@@ -10,8 +10,9 @@ export async function generateSocraticReflection(params: {
   description: string
   coreEmotion?: string | null
   therapeuticFocus?: string | null
+  triggerTitle?: string | null
 }): Promise<SocraticReflection> {
-  const { description, coreEmotion, therapeuticFocus } = params
+  const { description, coreEmotion, therapeuticFocus, triggerTitle } = params
 
   if (!process.env.OPENAI_API_KEY) {
     return {
@@ -47,6 +48,7 @@ Retorne ESTRITAMENTE em formato JSON com as chaves:
 - Relato do diário: "${description}"
 - Sentimento relacionado: ${coreEmotion || 'Não informado'}
 - Foco Terapêutico da Semana: ${therapeuticFocus ? `"${therapeuticFocus}"` : 'Nenhum foco específico registrado'}
+${triggerTitle ? `- Evento/Gatilho associado: "${triggerTitle}"` : ''}
 `
 
   try {
@@ -228,5 +230,62 @@ ${qaBlock ? `- Diálogo Socrático:\n${qaBlock}` : '- Diálogo Socrático: Não 
   } catch (err) {
     console.error('Falha ao gerar relatório semanal na OpenAI:', err)
     throw err
+  }
+}
+
+export async function generateTriggerNotification(params: {
+  title: string
+  therapeuticFocus?: string | null
+}): Promise<{ title: string; body: string }> {
+  const { title, therapeuticFocus } = params
+  const fallback = {
+    title: 'BetterThoughts',
+    body: `Como foi "${title}"? Tire 3 minutos para registrar no diário.`,
+  }
+
+  if (!process.env.OPENAI_API_KEY) {
+    return fallback
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: `Você escreve notificações push curtas e acolhedoras para um diário terapêutico (TCC).
+Regras:
+- Português do Brasil, tom leve, gentil e sem cobrança.
+- "title": curto (máx 40 caracteres), ex: "Como foi hoje?" ou menção suave ao evento.
+- "body": máximo 125 caracteres para caber inteiro na tela bloqueada do iPhone, convidando o usuário a tirar alguns minutos para relatar sobre o evento no diário.
+- Nunca dê conselhos ou diagnósticos.
+Retorne ESTRITAMENTE JSON: {"title": "...", "body": "..."}`,
+        },
+        {
+          role: 'user',
+          content: `Evento que ocorreu há algumas horas: "${title}".\nFoco terapêutico atual (use apenas como tom sutil se fizer sentido): ${therapeuticFocus || 'Nenhum informado'}.`,
+        },
+      ],
+      temperature: 0.75,
+      max_tokens: 140,
+    })
+
+    const raw = response.choices[0]?.message?.content
+    if (!raw) return fallback
+
+    const parsed = JSON.parse(raw) as { title?: string; body?: string }
+    const cleanTitle = parsed.title?.trim()
+    const cleanBody = parsed.body?.trim()
+
+    if (!cleanBody) return fallback
+
+    return {
+      title: cleanTitle ? cleanTitle.slice(0, 50) : fallback.title,
+      body: cleanBody.slice(0, 150),
+    }
+  } catch (err) {
+    console.warn('Falha ao gerar texto de notificação com IA, usando fallback:', err)
+    return fallback
   }
 }

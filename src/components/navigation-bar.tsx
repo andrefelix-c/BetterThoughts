@@ -30,7 +30,7 @@ export default function NavigationBar() {
               href={item.href}
               aria-label={item.label}
               title={item.label}
-              className={`flex flex-col items-center justify-center gap-1.5 py-1.5 px-5 transition-colors duration-150 ${
+              className={`flex flex-col items-center justify-center gap-1.5 py-1.5 px-3 sm:px-5 transition-colors duration-150 ${
                 isActive
                   ? 'text-[#5F7362]'
                   : 'text-[#2F3530]/45 hover:text-[#2F3530]/80'
