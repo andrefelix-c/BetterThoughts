@@ -1,69 +1,159 @@
-import Image from "next/image";
+import { Suspense } from 'react'
+import { connection } from 'next/server'
+import Link from 'next/link'
+import { createClient } from '@/utils/supabase/server'
+import prisma from '@/lib/prisma'
+import type { Entry } from '@prisma/client'
+import JournalForm from '@/components/journal-form'
+import TodayDate from '@/components/today-date'
+import { getEmotionConfig } from '@/lib/emotions'
 
-export default function Home() {
+async function JournalContent() {
+  await connection()
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  let therapeuticFocus: string | null = null
+  let recentEntries: Entry[] = []
+
+  if (user) {
+    try {
+      const profile = await prisma.profile.findUnique({
+        where: { id: user.id },
+        select: { therapeutic_focus: true },
+      })
+      therapeuticFocus = profile?.therapeutic_focus || null
+
+      recentEntries = await prisma.entry.findMany({
+        where: { user_id: user.id },
+        orderBy: { created_at: 'desc' },
+        take: 3,
+      })
+    } catch (err) {
+      console.error('Erro ao consultar dados no Prisma:', err)
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <div
+      className={
+        recentEntries.length > 0
+          ? 'grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start'
+          : 'max-w-2xl mx-auto'
+      }
+    >
+      {/* Folha principal de escrita */}
+      <div className={recentEntries.length > 0 ? 'lg:col-span-7 space-y-5' : 'space-y-5'}>
+        <header className="space-y-1.5">
+          <TodayDate />
+          <h1 className="font-serif text-[26px] sm:text-3xl font-medium tracking-tight text-[#2F3530]">
+            Diário Terapêutico
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xs sm:text-sm text-[#2F3530]/60 leading-relaxed">
+            Um espaço tranquilo para registrar o seu dia e refletir com clareza.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+        </header>
+
+        <JournalForm activeFocus={therapeuticFocus} />
+      </div>
+
+      {/* Registros recentes */}
+      {recentEntries.length > 0 && (
+        <aside className="lg:col-span-5 lg:border-l lg:border-[#E2DDD3] lg:pl-8 pt-2 lg:pt-1 space-y-4 lg:sticky lg:top-20">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-medium text-[#2F3530]/60">
+              Registros recentes
+            </h2>
+            <Link
+              href="/historico"
+              className="text-xs font-medium text-[#7B907E] hover:text-[#5F7362] transition"
+            >
+              Ver histórico →
+            </Link>
+          </div>
+
+          <div className="space-y-3">
+            {recentEntries.map((entry) => {
+              const emotion = getEmotionConfig(entry.core_emotion)
+              const aiData = entry.ai_reflection as {
+                questions?: string[]
+                answers?: string[]
+              } | null
+              const totalQuestions = aiData?.questions?.length || 0
+              const answeredCount =
+                aiData?.answers?.filter((a) => a && a.trim().length > 0).length || 0
+
+              return (
+                <Link
+                  key={entry.id}
+                  href="/historico"
+                  className="block bg-[#EAE5DC]/75 hover:bg-[#EAE5DC] rounded-2xl p-4 border border-[#DED8CD]/80 transition space-y-2"
+                >
+                  <div className="flex items-center justify-between gap-2 text-xs">
+                    <span className="font-medium text-[#2F3530] flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${emotion.dotClass}`} />
+                      {emotion.label}
+                    </span>
+                    <span className="text-[11px] text-[#2F3530]/50">
+                      {entry.created_at
+                        ? new Date(entry.created_at).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : ''}
+                    </span>
+                  </div>
+
+                  <p className="text-[13px] text-[#2F3530]/80 line-clamp-3 leading-relaxed">
+                    {entry.description}
+                  </p>
+
+                  {totalQuestions > 0 && (
+                    <p className="text-[11px] text-[#5B705E] font-medium pt-0.5">
+                      {answeredCount > 0
+                        ? `${answeredCount} de ${totalQuestions} perguntas respondidas`
+                        : `${totalQuestions} ${
+                            totalQuestions === 1
+                              ? 'pergunta reflexiva'
+                              : 'perguntas reflexivas'
+                          }`}
+                    </p>
+                  )}
+                </Link>
+              )
+            })}
+          </div>
+        </aside>
+      )}
     </div>
-  );
+  )
+}
+
+export default function HomePage() {
+  return (
+    <div className="max-w-lg md:max-w-3xl lg:max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-9">
+      <Suspense
+        fallback={
+          <div className="max-w-2xl mx-auto space-y-4">
+            <div className="space-y-1.5">
+              <TodayDate />
+              <h1 className="font-serif text-[26px] sm:text-3xl font-medium tracking-tight text-[#2F3530]">
+                Diário Terapêutico
+              </h1>
+            </div>
+            <div className="py-12 text-xs text-[#2F3530]/50 animate-pulse border-t border-[#E2DDD3]">
+              Preparando seu diário terapêutico...
+            </div>
+          </div>
+        }
+      >
+        <JournalContent />
+      </Suspense>
+    </div>
+  )
 }
