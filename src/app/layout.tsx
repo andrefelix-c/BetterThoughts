@@ -6,6 +6,7 @@ import './globals.css'
 import NavigationBar from '@/components/navigation-bar'
 import Header from '@/components/header'
 import AuthListener from '@/components/auth-listener'
+import PwaZoomGuard from '@/components/pwa-zoom-guard'
 
 config.autoAddCss = false
 
@@ -24,6 +25,8 @@ export const viewport: Viewport = {
   themeColor: '#F7F5F0',
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: 'cover',
 }
 
@@ -48,9 +51,10 @@ export default function RootLayout({
       className={`${plusJakartaSans.variable} ${lora.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#F7F5F0] text-[#2F3530] font-sans selection:bg-[#7B907E]/25 selection:text-[#2F3530]">
+        <PwaZoomGuard />
         <AuthListener />
         <Header />
-        <main className="flex-1 pb-24 md:pb-12">{children}</main>
+        <main className="flex-1 min-w-0 w-full pb-24 md:pb-12">{children}</main>
         <NavigationBar />
       </body>
     </html>

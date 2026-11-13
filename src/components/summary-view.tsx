@@ -154,8 +154,8 @@ export default function SummaryView() {
           value={typeof window !== 'undefined' ? new Date().getTimezoneOffset() : 180}
         />
 
-        <div className="grid grid-cols-2 gap-5 flex-1">
-          <div className="space-y-1">
+        <div className="grid grid-cols-2 gap-4 sm:gap-5 flex-1 min-w-0">
+          <div className="min-w-0 space-y-1">
             <label
               htmlFor="startDate"
               className="block text-xs text-[#2F3530]/55"
@@ -174,7 +174,7 @@ export default function SummaryView() {
             />
           </div>
 
-          <div className="space-y-1">
+          <div className="min-w-0 space-y-1">
             <label
               htmlFor="endDate"
               className="block text-xs text-[#2F3530]/55"
@@ -288,7 +288,7 @@ export default function SummaryView() {
             <h2 className="text-xs font-medium text-[#2F3530]/55">
               Resumo do período
             </h2>
-            <p className="text-sm sm:text-[15px] text-[#2F3530]/90 leading-[1.75]">
+            <p className="text-sm sm:text-[15px] text-[#2F3530]/90 leading-[1.75] wrap-break-word">
               {state.report.periodSummary}
             </p>
           </section>
@@ -301,8 +301,8 @@ export default function SummaryView() {
               <div className="space-y-3">
                 {state.report.emotionalVariations.map((item, idx) => (
                   <div key={idx} className="space-y-0.5">
-                    <p className="text-sm font-medium text-[#2F3530]">{item.title}</p>
-                    <p className="text-xs sm:text-sm text-[#2F3530]/70 leading-relaxed">
+                    <p className="text-sm font-medium text-[#2F3530] wrap-break-word">{item.title}</p>
+                    <p className="text-xs sm:text-sm text-[#2F3530]/70 leading-relaxed wrap-break-word">
                       {item.description}
                     </p>
                   </div>
@@ -320,7 +320,7 @@ export default function SummaryView() {
                 {state.report.repetitivePatterns.map((pattern, idx) => (
                   <li key={idx} className="leading-relaxed flex items-start gap-2.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#C98A74] mt-2 shrink-0" />
-                    <span>{pattern}</span>
+                    <span className="min-w-0 wrap-break-word">{pattern}</span>
                   </li>
                 ))}
               </ul>
@@ -338,7 +338,7 @@ export default function SummaryView() {
                     <span className="text-xs font-medium text-[#7B907E] mt-0.5 shrink-0">
                       {idx + 1}.
                     </span>
-                    <span>{point}</span>
+                    <span className="min-w-0 wrap-break-word">{point}</span>
                   </li>
                 ))}
               </ol>
@@ -351,7 +351,7 @@ export default function SummaryView() {
                 <span className="text-xs font-medium text-[#2F3530]/55 block">
                   Insight
                 </span>
-                <p className="font-serif italic text-[15px] text-[#2F3530]/85 leading-relaxed">
+                <p className="font-serif italic text-[15px] text-[#2F3530]/85 leading-relaxed wrap-break-word">
                   {state.report.generalInsight}
                 </p>
               </div>

@@ -85,7 +85,7 @@ function ReflectionAnswerSection({
                   setAnswers(next)
                 }}
                 placeholder="Escreva sua reflexão..."
-                className="w-full p-3 rounded-xl border border-[#DDD6CA] bg-transparent text-[#2F3530] text-sm placeholder-[#2F3530]/40 focus:outline-none focus:ring-2 focus:ring-[#7B907E]/30 focus:border-[#7B907E] transition resize-none leading-relaxed"
+                className="w-full p-3 rounded-xl border border-[#DDD6CA] bg-transparent text-[#2F3530] text-base sm:text-sm placeholder-[#2F3530]/40 focus:outline-none focus:ring-2 focus:ring-[#7B907E]/30 focus:border-[#7B907E] transition resize-none leading-relaxed"
               />
             </div>
           ))}
@@ -196,7 +196,7 @@ export default function JournalForm({
           <span className="font-medium text-[#2F3530]/55 block">
             Foco terapêutico da semana
           </span>
-          <p className="text-[#2F3530]/85">{activeFocus}</p>
+          <p className="text-[#2F3530]/85 wrap-break-word">{activeFocus}</p>
         </div>
       )}
 
@@ -273,7 +273,7 @@ export default function JournalForm({
             required
             rows={8}
             placeholder="Escreva no seu ritmo sobre seus pensamentos, acontecimentos ou algo que mexeu com você hoje..."
-            className="w-full bg-transparent border-0 p-0 text-[#2F3530] text-[15px] sm:text-base placeholder-[#2F3530]/35 focus:outline-none focus:ring-0 resize-none min-h-[190px] sm:min-h-[230px] leading-[1.75]"
+            className="w-full bg-transparent border-0 p-0 text-[#2F3530] text-base placeholder-[#2F3530]/35 focus:outline-none focus:ring-0 resize-none min-h-[190px] sm:min-h-[230px] leading-[1.75]"
           />
         </div>
 

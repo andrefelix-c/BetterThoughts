@@ -140,7 +140,7 @@ export default function HistoryEntryCard({ entry }: { entry: HistoryEntryProps }
             <time className="text-[11px] text-[#2F3530]/50 font-normal">{formattedDate}</time>
           </div>
 
-          <p className="text-sm sm:text-[15px] text-[#2F3530]/85 leading-relaxed line-clamp-2">
+          <p className="text-sm sm:text-[15px] text-[#2F3530]/85 leading-relaxed line-clamp-2 wrap-break-word">
             {entry.description}
           </p>
 
@@ -220,8 +220,8 @@ export default function HistoryEntryCard({ entry }: { entry: HistoryEntryProps }
               </div>
             </div>
 
-            <div className="overflow-y-auto px-5 sm:px-6 py-5 space-y-6">
-              <div className="text-[#2F3530] text-[15px] leading-[1.75] whitespace-pre-wrap">
+            <div className="overflow-y-auto px-5 sm:px-6 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:py-5 space-y-6">
+              <div className="text-[#2F3530] text-[15px] leading-[1.75] whitespace-pre-wrap wrap-break-word">
                 {entry.description}
               </div>
 
@@ -266,7 +266,7 @@ export default function HistoryEntryCard({ entry }: { entry: HistoryEntryProps }
                               {idx + 1}. {question}
                             </p>
                             {answer && answer.trim() ? (
-                              <p className="text-sm text-[#2F3530] border-l-2 border-[#7B907E]/45 pl-3 py-0.5 whitespace-pre-wrap leading-relaxed">
+                              <p className="text-sm text-[#2F3530] border-l-2 border-[#7B907E]/45 pl-3 py-0.5 whitespace-pre-wrap wrap-break-word leading-relaxed">
                                 {answer}
                               </p>
                             ) : (
@@ -301,7 +301,7 @@ export default function HistoryEntryCard({ entry }: { entry: HistoryEntryProps }
                               setAnswers(next)
                             }}
                             placeholder="Escreva sua reflexão aqui..."
-                            className="w-full rounded-xl bg-transparent border border-[#DDD6CA] px-3.5 py-2 text-sm text-[#2F3530] placeholder:text-[#2F3530]/35 focus:outline-none focus:ring-2 focus:ring-[#7B907E]/30 focus:border-[#7B907E] resize-y"
+                            className="w-full rounded-xl bg-transparent border border-[#DDD6CA] px-3.5 py-2 text-base sm:text-sm text-[#2F3530] placeholder:text-[#2F3530]/35 focus:outline-none focus:ring-2 focus:ring-[#7B907E]/30 focus:border-[#7B907E] resize-y"
                           />
                         </div>
                       ))}

@@ -80,7 +80,7 @@ async function FocoContent() {
             rows={6}
             defaultValue={currentFocus}
             placeholder="Ex: Observar quando começo a me cobrar excessivamente no trabalho e praticar a pausa consciente..."
-            className="w-full bg-transparent border-0 p-0 text-[#2F3530] text-[15px] sm:text-base placeholder-[#2F3530]/35 focus:outline-none focus:ring-0 resize-none min-h-[160px] leading-[1.75]"
+            className="w-full bg-transparent border-0 p-0 text-[#2F3530] text-base placeholder-[#2F3530]/35 focus:outline-none focus:ring-0 resize-none min-h-[160px] leading-[1.75]"
           />
         </div>
 

@@ -50,7 +50,7 @@ export default function RedefinirSenhaPage() {
   }
 
   return (
-    <div className="min-h-dvh w-full -mb-24 md:-mb-12 flex items-center justify-center px-4 sm:px-6 py-8 bg-[#F7F5F0] text-[#2F3530]">
+    <div className="min-h-dvh w-full -mb-24 md:-mb-12 flex items-center justify-center px-4 sm:px-6 pt-[max(2rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))] sm:py-8 bg-[#F7F5F0] text-[#2F3530]">
       <div className="w-full max-w-sm sm:max-w-md bg-[#EAE5DC] rounded-3xl border border-[#DDD6CA] p-6 sm:p-8 space-y-6">
         <header className="space-y-4 text-center sm:text-left">
           <div className="flex justify-center sm:justify-start">
@@ -103,7 +103,7 @@ export default function RedefinirSenhaPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Crie uma senha forte"
-              className="w-full px-4 py-3 rounded-2xl border border-[#D7CFC2] bg-[#F7F5F0] text-[#2F3530] placeholder-[#2F3530]/40 text-sm transition focus:outline-none focus:ring-2 focus:ring-[#7B907E]/45 focus:border-[#7B907E]"
+              className="w-full px-4 py-3 rounded-2xl border border-[#D7CFC2] bg-[#F7F5F0] text-[#2F3530] placeholder-[#2F3530]/40 text-base sm:text-sm transition focus:outline-none focus:ring-2 focus:ring-[#7B907E]/45 focus:border-[#7B907E]"
             />
           </div>
 
@@ -123,7 +123,7 @@ export default function RedefinirSenhaPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Digite novamente"
-              className="w-full px-4 py-3 rounded-2xl border border-[#D7CFC2] bg-[#F7F5F0] text-[#2F3530] placeholder-[#2F3530]/40 text-sm transition focus:outline-none focus:ring-2 focus:ring-[#7B907E]/45 focus:border-[#7B907E]"
+              className="w-full px-4 py-3 rounded-2xl border border-[#D7CFC2] bg-[#F7F5F0] text-[#2F3530] placeholder-[#2F3530]/40 text-base sm:text-sm transition focus:outline-none focus:ring-2 focus:ring-[#7B907E]/45 focus:border-[#7B907E]"
             />
           </div>
 

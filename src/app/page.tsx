@@ -46,7 +46,7 @@ async function JournalContent() {
       }
     >
       {/* Folha principal de escrita */}
-      <div className={recentEntries.length > 0 ? 'lg:col-span-7 space-y-5' : 'space-y-5'}>
+      <div className={recentEntries.length > 0 ? 'lg:col-span-7 min-w-0 space-y-5' : 'min-w-0 space-y-5'}>
         <header className="space-y-1.5">
           <TodayDate />
           <h1 className="font-serif text-[26px] sm:text-3xl font-medium tracking-tight text-[#2F3530]">
@@ -62,7 +62,7 @@ async function JournalContent() {
 
       {/* Registros recentes */}
       {recentEntries.length > 0 && (
-        <aside className="lg:col-span-5 lg:border-l lg:border-[#E2DDD3] lg:pl-8 pt-2 lg:pt-1 space-y-4 lg:sticky lg:top-20">
+        <aside className="lg:col-span-5 min-w-0 lg:border-l lg:border-[#E2DDD3] lg:pl-8 pt-2 lg:pt-1 space-y-4 lg:sticky lg:top-20">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-medium text-[#2F3530]/60">
               Registros recentes
@@ -92,7 +92,7 @@ async function JournalContent() {
                   href="/historico"
                   className="block bg-[#EAE5DC]/75 hover:bg-[#EAE5DC] rounded-2xl p-4 border border-[#DED8CD]/80 transition space-y-2"
                 >
-                  <div className="flex items-center justify-between gap-2 text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                     <span className="font-medium text-[#2F3530] flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${emotion.dotClass}`} />
                       {emotion.label}
@@ -109,7 +109,7 @@ async function JournalContent() {
                     </span>
                   </div>
 
-                  <p className="text-[13px] text-[#2F3530]/80 line-clamp-3 leading-relaxed">
+                  <p className="text-[13px] text-[#2F3530]/80 line-clamp-3 leading-relaxed wrap-break-word">
                     {entry.description}
                   </p>
 

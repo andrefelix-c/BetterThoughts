@@ -177,7 +177,7 @@ export default function DatePicker({
       : maxIso
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative min-w-0" ref={containerRef}>
       <input type="hidden" name={name} value={value} />
 
       <button
@@ -189,11 +189,11 @@ export default function DatePicker({
         aria-label={label || 'Selecionar data'}
         className={
           variant === 'underline'
-            ? 'w-full border-0 border-b border-[#D7CFC2] hover:border-[#2F3530]/60 focus:border-[#2F3530] bg-transparent px-0 py-1.5 text-sm text-[#2F3530] focus:outline-none transition flex items-center justify-between gap-2 cursor-pointer text-left'
+            ? 'w-full min-w-0 border-0 border-b border-[#D7CFC2] hover:border-[#2F3530]/60 focus:border-[#2F3530] bg-transparent px-0 py-1.5 text-sm text-[#2F3530] focus:outline-none transition flex items-center justify-between gap-2 cursor-pointer text-left'
             : 'border-0 border-b border-[#D7CFC2] hover:border-[#2F3530]/60 focus:border-[#2F3530] bg-transparent px-0 py-0.5 text-xs text-[#2F3530] focus:outline-none transition inline-flex items-center gap-1.5 cursor-pointer'
         }
       >
-        <span>{formatDisplayValue(value, includeTime)}</span>
+        <span className="truncate">{formatDisplayValue(value, includeTime)}</span>
         <FaIcon icon={faCalendar} className="w-3.5 h-3.5 text-[#7B907E] shrink-0" />
       </button>
 
@@ -295,7 +295,7 @@ export default function DatePicker({
                   aria-label="Hora"
                   value={parsed.hour}
                   onChange={(e) => handleTimeChange(e.target.value, parsed.minute)}
-                  className="bg-transparent border-b border-[#D7CFC2] focus:border-[#2F3530] text-xs font-medium text-[#2F3530] py-0.5 px-1 focus:outline-none cursor-pointer"
+                  className="bg-transparent border-b border-[#D7CFC2] focus:border-[#2F3530] text-base sm:text-xs font-medium text-[#2F3530] py-0.5 px-1 focus:outline-none cursor-pointer"
                 >
                   {HOURS.map((h) => (
                     <option key={h} value={h} className="bg-[#F7F5F0]">
@@ -308,7 +308,7 @@ export default function DatePicker({
                   aria-label="Minutos"
                   value={parsed.minute}
                   onChange={(e) => handleTimeChange(parsed.hour, e.target.value)}
-                  className="bg-transparent border-b border-[#D7CFC2] focus:border-[#2F3530] text-xs font-medium text-[#2F3530] py-0.5 px-1 focus:outline-none cursor-pointer"
+                  className="bg-transparent border-b border-[#D7CFC2] focus:border-[#2F3530] text-base sm:text-xs font-medium text-[#2F3530] py-0.5 px-1 focus:outline-none cursor-pointer"
                 >
                   {MINUTES.map((m) => (
                     <option key={m} value={m} className="bg-[#F7F5F0]">

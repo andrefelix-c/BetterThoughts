@@ -50,7 +50,7 @@ export default function SignupForm() {
           required
           autoComplete="email"
           placeholder="Seu e-mail"
-          className="w-full rounded-none bg-transparent border-0 border-b border-[#D7CFC2] px-1 py-2.5 text-sm text-[#2F3530] placeholder-[#2F3530]/45 transition focus:outline-none focus:border-[#2F3530]"
+          className="w-full rounded-none bg-transparent border-0 border-b border-[#D7CFC2] px-1 py-2.5 text-base sm:text-sm text-[#2F3530] placeholder-[#2F3530]/45 transition focus:outline-none focus:border-[#2F3530]"
         />
       </div>
 

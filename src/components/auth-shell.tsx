@@ -82,7 +82,7 @@ export default function AuthShell({
       </div>
 
       {/* Lado direito (desktop) / Tela única (mobile) */}
-      <div className="min-h-dvh flex flex-col items-center justify-center bg-[#F7F5F0] px-6 sm:px-8 lg:px-12 xl:px-16 py-8 sm:py-10 lg:py-12 relative overflow-hidden">
+      <div className="min-h-dvh min-w-0 flex flex-col items-center justify-center bg-[#F7F5F0] px-6 sm:px-8 lg:px-12 xl:px-16 pt-[max(2rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))] sm:py-10 lg:py-12 relative overflow-hidden">
         {/* Topo: Logo + Título */}
         <header className="w-full max-w-sm flex flex-col items-center text-center space-y-4">
           <Image
