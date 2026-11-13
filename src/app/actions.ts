@@ -151,8 +151,9 @@ export async function saveEntryAnswers(
   // Coleta as respostas do formulário (answer_0, answer_1, ...)
   const answers: string[] = []
   let index = 0
-  while (formData.has(`answer_${index}`)) {
-    answers.push(((formData.get(`answer_${index}`) as string) || '').trim())
+  while (formData.has(`answer_${index}`) || formData.has(`answer-${index}`)) {
+    const rawValue = formData.get(`answer_${index}`) ?? formData.get(`answer-${index}`)
+    answers.push(((rawValue as string) || '').trim())
     index++
   }
 

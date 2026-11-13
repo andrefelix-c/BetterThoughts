@@ -339,7 +339,10 @@ export default function HistoryEntryCard({ entry }: { entry: HistoryEntryProps }
                     {hasQuestions && !isEditingAnswers && (
                       <button
                         type="button"
-                        onClick={() => setIsEditingAnswers(true)}
+                        onClick={() => {
+                          setAnswers(questions.map((_, idx) => savedAnswers[idx] || ''))
+                          setIsEditingAnswers(true)
+                        }}
                         className="text-xs font-medium text-[#7B907E] hover:text-[#5F7362] hover:underline cursor-pointer"
                       >
                         {hasExistingAnswers ? 'Editar respostas' : 'Responder'}
@@ -389,7 +392,7 @@ export default function HistoryEntryCard({ entry }: { entry: HistoryEntryProps }
                           </label>
                           <textarea
                             id={`modal-answer-${entry.id}-${idx}`}
-                            name={`answer-${idx}`}
+                            name={`answer_${idx}`}
                             rows={2}
                             value={answers[idx] || ''}
                             onChange={(e) => {
