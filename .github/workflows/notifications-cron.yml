@@ -19,14 +19,23 @@ jobs:
             exit 0
           fi
 
-          STATUS=$(curl -sS -o response.json -w "%{http_code}" \
-            -H "Authorization: Bearer $CRON_SECRET" \
-            "${APP_URL%/}/api/cron/notifications")
+          CLEAN_URL=$(printf '%s' "$APP_URL" | tr -d '[:space:]')
+          case "$CLEAN_URL" in
+            http://*|https://*) ;;
+            *) CLEAN_URL="https://$CLEAN_URL" ;;
+          esac
 
-          cat response.json
+          # Garante apenas esquema + domínio (caso APP_URL tenha sido salvo com caminho extra)
+          ORIGIN=$(printf '%s' "$CLEAN_URL" | sed -E 's#(https?://[^/]+).*#\1#')
+
+          STATUS=$(curl -sS --connect-timeout 15 --max-time 60 -o response.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "${ORIGIN}/api/cron/notifications")
+
+          echo "HTTP Status: $STATUS"
+          cat response.json || true
           echo ""
           if [ "$STATUS" -lt 200 ] || [ "$STATUS" -ge 300 ]; then
             echo "Falha HTTP $STATUS"
             exit 1
           fi
-

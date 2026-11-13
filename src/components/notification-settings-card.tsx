@@ -170,6 +170,34 @@ export default function NotificationSettingsCard({
     }
   }
 
+  const handleTestPush = async () => {
+    setPushBusy(true)
+    setPushFeedback(null)
+
+    try {
+      const response = await fetch('/api/push/test', { method: 'POST' })
+      const data = (await response.json().catch(() => ({}))) as {
+        success?: boolean
+        sent?: number
+        error?: string
+      }
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Falha ao enviar notificação de teste.')
+      }
+
+      setPushFeedback(
+        'Teste enviado! Se estiver com o app aberto, bloqueie a tela ou volte para a Home para ver o banner.'
+      )
+    } catch (err) {
+      setPushFeedback(
+        err instanceof Error ? err.message : 'Erro ao testar notificação.'
+      )
+    } finally {
+      setPushBusy(false)
+    }
+  }
+
   const handleDisablePush = async () => {
     setPushBusy(true)
     setPushFeedback(null)
@@ -243,6 +271,14 @@ export default function NotificationSettingsCard({
                 <FaIcon icon={faCheck} className="w-3 h-3 text-[#7B907E]" />
                 Ativo aqui
               </span>
+              <button
+                type="button"
+                onClick={handleTestPush}
+                disabled={pushBusy}
+                className={`${BUTTON_SECONDARY} px-3 py-1.5`}
+              >
+                {pushBusy ? 'Enviando...' : 'Testar'}
+              </button>
               <button
                 type="button"
                 onClick={handleDisablePush}

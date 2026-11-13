@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
   let eventNotificationsSent = 0
   let checkinNotificationsSent = 0
   let subscriptionsCleaned = 0
+  const errors: string[] = []
   const eventNotifiedUsers = new Set<string>()
 
   // 1. Notificações de Gatilhos (2h a 24h após o event_time, geradas por IA)
@@ -97,6 +98,8 @@ export async function GET(request: NextRequest) {
           where: { id: sub.id },
         })
         subscriptionsCleaned++
+      } else if (res.error) {
+        errors.push(`trigger:${trigger.id}: ${res.error}`)
       }
     }
 
@@ -186,6 +189,8 @@ export async function GET(request: NextRequest) {
           where: { id: sub.id },
         })
         subscriptionsCleaned++
+      } else if (res.error) {
+        errors.push(`checkin:${profile.id}: ${res.error}`)
       }
     }
 
@@ -204,6 +209,7 @@ export async function GET(request: NextRequest) {
     eventNotificationsSent,
     checkinNotificationsSent,
     subscriptionsCleaned,
+    errors,
   })
 }
 
