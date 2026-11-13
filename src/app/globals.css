@@ -48,13 +48,3 @@ input:-webkit-autofill:active {
   box-shadow: 0 0 0 1000px #F7F5F0 inset;
   transition: background-color 999999s ease-in-out 0s;
 }
-
-@media (max-width: 1023px) {
-  .auth-input:-webkit-autofill,
-  .auth-input:-webkit-autofill:hover,
-  .auth-input:-webkit-autofill:focus,
-  .auth-input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 1000px #EAE5DC inset;
-    box-shadow: 0 0 0 1000px #EAE5DC inset;
-  }
-}

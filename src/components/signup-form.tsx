@@ -25,7 +25,7 @@ export default function SignupForm() {
   }
 
   return (
-    <form action={signup} onSubmit={handleSubmit} className="space-y-3 lg:space-y-4">
+    <form action={signup} onSubmit={handleSubmit} className="space-y-4">
       {clientError && (
         <div
           role="alert"
@@ -50,7 +50,7 @@ export default function SignupForm() {
           required
           autoComplete="email"
           placeholder="Seu e-mail"
-          className="auth-input w-full rounded-full px-5 py-3.5 text-sm bg-[#EAE5DC] border border-[#D7CFC2] text-[#2F3530] placeholder-[#2F3530]/45 transition focus:outline-none focus:ring-2 focus:ring-[#7B907E]/45 focus:border-[#7B907E] lg:rounded-none lg:bg-transparent lg:border-0 lg:border-b lg:border-[#D7CFC2] lg:px-1 lg:py-2.5 lg:focus:ring-0 lg:focus:border-[#2F3530]"
+          className="w-full rounded-none bg-transparent border-0 border-b border-[#D7CFC2] px-1 py-2.5 text-sm text-[#2F3530] placeholder-[#2F3530]/45 transition focus:outline-none focus:border-[#2F3530]"
         />
       </div>
 

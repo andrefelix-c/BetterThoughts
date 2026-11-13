@@ -9,7 +9,6 @@ export default function CadastroPage(props: {
     <AuthShell
       title="Criar conta"
       subtitle="Preencha seus dados para começar seu diário terapêutico"
-      mobileTagline={['Um espaço seguro.', 'Para os seus pensamentos.']}
       searchParams={props.searchParams}
       footer={
         <p>
