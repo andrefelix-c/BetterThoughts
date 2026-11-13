@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { faLightbulb, faTrashCan } from '@fortawesome/free-regular-svg-icons'
 import { faChevronRight, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { deleteJournalEntry, saveEntryAnswers } from '@/app/actions'
@@ -36,10 +36,88 @@ export default function HistoryEntryCard({ entry }: { entry: HistoryEntryProps }
   })
   const [isDeleted, setIsDeleted] = useState(false)
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null)
+  const [dragY, setDragY] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+
+  const scrollBodyRef = useRef<HTMLDivElement>(null)
+  const touchStartYRef = useRef<number | null>(null)
+  const touchStartXRef = useRef<number | null>(null)
+  const touchStartTimeRef = useRef<number>(0)
+  const canDragDownRef = useRef(false)
+  const draggingActiveRef = useRef(false)
+
+  const handleOpen = () => {
+    setDragY(0)
+    setIsDragging(false)
+    setIsOpen(true)
+  }
 
   const handleClose = () => {
     setIsOpen(false)
     setIsEditingAnswers(false)
+    setDragY(0)
+    setIsDragging(false)
+  }
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (window.innerWidth >= 640 || e.touches.length !== 1) return
+
+    const touch = e.touches[0]
+    touchStartYRef.current = touch.clientY
+    touchStartXRef.current = touch.clientX
+    touchStartTimeRef.current = Date.now()
+    draggingActiveRef.current = false
+
+    const bodyEl = scrollBodyRef.current
+    const startedInsideBody = bodyEl ? bodyEl.contains(e.target as Node) : false
+    canDragDownRef.current = !startedInsideBody || (bodyEl ? bodyEl.scrollTop <= 0 : true)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (
+      touchStartYRef.current === null ||
+      touchStartXRef.current === null ||
+      !canDragDownRef.current ||
+      e.touches.length !== 1
+    ) {
+      return
+    }
+
+    const touch = e.touches[0]
+    const deltaY = touch.clientY - touchStartYRef.current
+    const deltaX = touch.clientX - touchStartXRef.current
+
+    if (!draggingActiveRef.current) {
+      if (deltaY > 8 && deltaY > Math.abs(deltaX)) {
+        draggingActiveRef.current = true
+        setIsDragging(true)
+      } else if (deltaY < -6 || Math.abs(deltaX) > 12) {
+        canDragDownRef.current = false
+        return
+      } else {
+        return
+      }
+    }
+
+    setDragY(Math.max(0, deltaY))
+  }
+
+  const handleTouchEnd = () => {
+    if (draggingActiveRef.current) {
+      const elapsed = Math.max(1, Date.now() - touchStartTimeRef.current)
+      const velocity = dragY / elapsed
+      if (dragY > 95 || (dragY > 45 && velocity > 0.45)) {
+        handleClose()
+      } else {
+        setIsDragging(false)
+        setDragY(0)
+      }
+    }
+
+    touchStartYRef.current = null
+    touchStartXRef.current = null
+    canDragDownRef.current = false
+    draggingActiveRef.current = false
   }
 
   useEffect(() => {
@@ -129,7 +207,7 @@ export default function HistoryEntryCard({ entry }: { entry: HistoryEntryProps }
       <div className="border-b border-[#E2DDD3] py-1.5">
         <button
           type="button"
-          onClick={() => setIsOpen(true)}
+          onClick={handleOpen}
           className="w-full text-left rounded-2xl px-3 py-3.5 sm:py-4 hover:bg-[#EAE5DC]/45 transition-colors cursor-pointer space-y-2.5 group"
         >
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -185,9 +263,25 @@ export default function HistoryEntryCard({ entry }: { entry: HistoryEntryProps }
             role="dialog"
             aria-modal="true"
             aria-label="Detalhes do relato no diário terapêutico"
-            className="w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[85dvh] bg-[#F7F5F0] rounded-t-3xl sm:rounded-3xl border border-[#E2DDD3] shadow-xl flex flex-col overflow-hidden"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
+            style={
+              dragY > 0
+                ? { transform: `translateY(${dragY}px)` }
+                : undefined
+            }
+            className={`w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[85dvh] bg-[#F7F5F0] rounded-t-3xl sm:rounded-3xl border-t sm:border border-[#E2DDD3] shadow-xl flex flex-col overflow-hidden ${
+              isDragging ? 'transition-none' : 'transition-transform duration-200 ease-out'
+            }`}
           >
-            <div className="border-b border-[#E2DDD3] px-5 sm:px-6 py-4 flex items-center justify-between gap-3 shrink-0">
+            {/* Alça visual e cabeçalho arrastável no mobile */}
+            <div className="sm:hidden flex justify-center pt-3 pb-1 touch-none shrink-0">
+              <span className="w-10 h-1 rounded-full bg-[#2F3530]/20" aria-hidden="true" />
+            </div>
+
+            <div className="border-b border-[#E2DDD3] px-5 sm:px-6 pt-2.5 pb-3.5 sm:py-4 flex items-center justify-between gap-3 shrink-0 touch-none">
               <div className="flex flex-wrap items-center gap-2.5 min-w-0 text-xs">
                 <span className="font-medium text-[#2F3530] flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full ${emotion.dotClass}`} />
@@ -220,7 +314,10 @@ export default function HistoryEntryCard({ entry }: { entry: HistoryEntryProps }
               </div>
             </div>
 
-            <div className="overflow-y-auto px-5 sm:px-6 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:py-5 space-y-6">
+            <div
+              ref={scrollBodyRef}
+              className="overflow-y-auto overscroll-contain px-5 sm:px-6 pt-5 pb-[calc(2.5rem+env(safe-area-inset-bottom))] sm:py-6 space-y-6"
+            >
               <div className="text-[#2F3530] text-[15px] leading-[1.75] whitespace-pre-wrap wrap-break-word">
                 {entry.description}
               </div>
