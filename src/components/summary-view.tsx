@@ -288,7 +288,7 @@ export default function SummaryView() {
             <h2 className="text-xs font-medium text-[#2F3530]/55">
               Resumo do período
             </h2>
-            <p className="text-sm sm:text-[15px] text-[#2F3530]/90 leading-[1.75] wrap-break-word">
+            <p className="text-sm sm:text-[15px] text-[#2F3530]/90 leading-[1.75] whitespace-pre-line wrap-break-word">
               {state.report.periodSummary}
             </p>
           </section>

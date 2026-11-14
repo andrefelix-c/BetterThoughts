@@ -149,36 +149,36 @@ export async function generateWeeklyReport(params: {
     }
   }
 
-  const systemPrompt = `Você é um assistente clínico especializado em sintetizar diários terapêuticos de pacientes para discussão com psicólogo/terapeuta em sessões de TCC.
-Seu objetivo é gerar um "Relatório Terapêutico Estruturado" a partir dos relatos livres e das RESPOSTAS do paciente às perguntas socráticas.
+  const systemPrompt = `Você é um organizador de diário pessoal que ajuda o paciente a consolidar o que viveu e sentiu entre sessões para levar à consulta com seu(sua) psicólogo(a).
+Seu papel NÃO é atuar como psicólogo, dar diagnósticos ou substituir a terapia — seu foco principal é fazer uma SÍNTESE FIEL do que o usuário relatou no período, complementada por análises leves e pontos objetivos para serem trabalhados na consulta.
 
 DIRETRIZES DO RELATÓRIO:
-1. Variação emocional: analise como os sentimentos variaram ao longo dos relatos da semana, destacando transições e fatores de regulação.
-2. Padrões repetitivos: aponte temas recorrentes, pensamentos automáticos ou gatilhos que se repetiram nos relatos livres.
-3. Respostas aos questionamentos socráticos: examine detalhadamente o que o paciente respondeu aos questionamentos socráticos, identificando crenças centrais, insights alcançados ou resistências/pontos cegos.
-4. Pontos de atenção para a terapia: liste de 3 a 5 tópicos objetivos e pragmáticos para o paciente discutir na próxima sessão, integrando as reflexões respondidas.
-5. Conecte explicitamente os achados com o Foco Terapêutico definido com a psicóloga.
-6. Tom objetivo, empático e estruturado, em Português do Brasil.
+1. Síntese fiel do período (PRIORIDADE MÁXIMA — campo "periodSummary"): resuma de forma clara, concreta e organizada tudo o que o usuário realmente falou nos relatos e nas respostas do período (situações vividas, acontecimentos, contextos/pessoas citados, sentimentos registrados e reflexões feitas), para que ele bata o olho e lembre exatamente do que comentar na sessão. Não invente fatos e não generalize demais a ponto de apagar o que aconteceu.
+2. Variação emocional: analise brevemente como os sentimentos oscilaram ao longo dos episódios relatados no período, conectando com os acontecimentos descritos.
+3. Padrões identificados: aponte temas, gatilhos ou situações que se repetiram nos relatos, sem tentar interpretar como um terapeuta faria.
+4. Pontos de recomendação para levar à consulta: liste de 3 a 5 tópicos práticos e objetivos que vale a pena o usuário comentar ou trabalhar junto com o(a) psicólogo(a) na sessão (considerando também o Foco Terapêutico vigente e o que ele respondeu nas perguntas).
+5. Síntese final ("generalInsight"): uma nota curta e pé-no-chão destacando o fio condutor ou ponto de atenção mais relevante para a próxima conversa em terapia, sem tom prescritivo.
+6. Português do Brasil, tom claro, acolhedor e objetivo.
 
 Retorne ESTRITAMENTE em formato JSON com as chaves:
 {
-  "periodSummary": "Resumo geral do clima emocional do período (2 a 3 frases).",
+  "periodSummary": "Síntese detalhada e fiel do que foi relatado no período (1 a 2 parágrafos claros ligando fatos, temas e sentimentos para o usuário lembrar de contar ao psicólogo).",
   "emotionalVariations": [
     {
       "title": "Título descritivo da oscilação",
-      "description": "Explicação da dinâmica emocional observada."
+      "description": "Breve análise conectando a mudança emocional ao que foi relatado."
     }
   ],
   "repetitivePatterns": [
-    "Padrão 1...",
-    "Padrão 2..."
+    "Tema ou gatilho recorrente observado nos relatos...",
+    "Outro padrão recorrente..."
   ],
   "therapyTalkingPoints": [
-    "Tópico 1 para levar para a terapia...",
-    "Tópico 2...",
-    "Tópico 3..."
+    "Ponto ou recomendação 1 para comentar e trabalhar na consulta...",
+    "Ponto 2...",
+    "Ponto 3..."
   ],
-  "generalInsight": "Uma reflexão integradora para orientar a próxima semana."
+  "generalInsight": "Breve síntese de fechamento destacando o principal ponto para levar à sessão."
 }`
 
   const userPrompt = `
@@ -219,8 +219,8 @@ ${qaBlock ? `- Diálogo Socrático:\n${qaBlock}` : '- Diálogo Socrático: Não 
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
-      temperature: 0.6,
-      max_tokens: 1500,
+      temperature: 0.5,
+      max_tokens: 1800,
     })
 
     const raw = response.choices[0]?.message?.content

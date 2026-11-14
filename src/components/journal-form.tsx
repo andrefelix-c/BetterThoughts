@@ -1,7 +1,8 @@
 'use client'
 
-import { useActionState, useRef, useState, useTransition } from 'react'
+import { useActionState, useCallback, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { faBell, faCalendar, faLightbulb } from '@fortawesome/free-regular-svg-icons'
 import {
   faCheck,
@@ -32,15 +33,23 @@ function ReflectionAnswerSection({
   entryId,
   questions,
   onReset,
+  onSaved,
 }: {
   entryId?: string
   questions: string[]
   onReset: () => void
+  onSaved: () => void
 }) {
   const [answersState, answersAction, isSaving] = useActionState<
     SaveAnswersState,
     FormData
-  >(saveEntryAnswers, {})
+  >(async (prevState, formData) => {
+    const result = await saveEntryAnswers(prevState, formData)
+    if (result.success) {
+      onSaved()
+    }
+    return result
+  }, {})
 
   const [answers, setAnswers] = useState<string[]>(() =>
     questions.map(() => '')
@@ -142,6 +151,82 @@ export default function JournalForm({
   pendingTriggers?: JournalTriggerPrompt[]
   initialSelectedTriggerId?: string | null
 }) {
+  const router = useRouter()
+  const [formResetKey, setFormResetKey] = useState(0)
+  const [showSavedBanner, setShowSavedBanner] = useState(false)
+  const [initialTriggerId, setInitialTriggerId] = useState<string | null>(
+    initialSelectedTriggerId
+  )
+
+  const resetToFreshForm = useCallback(
+    (withSavedBanner: boolean) => {
+      setShowSavedBanner(withSavedBanner)
+      setInitialTriggerId(null)
+      setFormResetKey((prev) => prev + 1)
+
+      if (typeof window !== 'undefined') {
+        if (window.location.search.includes('triggerId=')) {
+          router.replace('/', { scroll: false })
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+      router.refresh()
+    },
+    [router]
+  )
+
+  return (
+    <div className="space-y-4">
+      {showSavedBanner && (
+        <div
+          role="status"
+          className="border-l-2 border-[#7B907E] pl-3.5 py-1 text-[#3F5142] text-xs flex items-center justify-between gap-3"
+        >
+          <span className="flex items-center gap-2">
+            <FaIcon icon={faCheck} className="w-3.5 h-3.5 text-[#7B907E] shrink-0" />
+            <span>
+              Respostas salvas com sucesso! Você já pode registrar um novo relato.
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowSavedBanner(false)}
+            aria-label="Fechar aviso"
+            className="text-[#2F3530]/40 hover:text-[#2F3530] p-1 cursor-pointer shrink-0"
+          >
+            <FaIcon icon={faXmark} className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      <JournalFormInner
+        key={formResetKey}
+        activeFocus={activeFocus}
+        pendingTriggers={pendingTriggers}
+        initialSelectedTriggerId={initialTriggerId}
+        onStartNewEntry={() => setShowSavedBanner(false)}
+        onReset={() => resetToFreshForm(false)}
+        onAnswersSaved={() => resetToFreshForm(true)}
+      />
+    </div>
+  )
+}
+
+function JournalFormInner({
+  activeFocus,
+  pendingTriggers = [],
+  initialSelectedTriggerId = null,
+  onStartNewEntry,
+  onReset,
+  onAnswersSaved,
+}: {
+  activeFocus?: string | null
+  pendingTriggers?: JournalTriggerPrompt[]
+  initialSelectedTriggerId?: string | null
+  onStartNewEntry: () => void
+  onReset: () => void
+  onAnswersSaved: () => void
+}) {
   const [selectedEmotion, setSelectedEmotion] = useState<string>('Neutro')
   const [useCustomDate, setUseCustomDate] = useState(false)
   const [customDateTime, setCustomDateTime] = useState('')
@@ -176,14 +261,12 @@ export default function JournalForm({
   }
 
   const [state, formAction, isPending] = useActionState<SaveEntryState, FormData>(
-    createJournalEntry,
+    async (prevState, formData) => {
+      onStartNewEntry()
+      return createJournalEntry(prevState, formData)
+    },
     {}
   )
-
-  const handleReset = () => {
-    setSelectedEmotion('Neutro')
-    window.location.reload()
-  }
 
   // Estado de reflexão socrática gerada
   if (state?.success && state.reflection) {
@@ -214,7 +297,8 @@ export default function JournalForm({
           <ReflectionAnswerSection
             entryId={state.savedEntryId}
             questions={state.reflection.questions}
-            onReset={handleReset}
+            onReset={onReset}
+            onSaved={onAnswersSaved}
           />
         </div>
       </div>
