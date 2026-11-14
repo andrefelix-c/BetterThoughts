@@ -61,7 +61,10 @@ async function GatilhosContent() {
 
       <TriggerForm />
 
-      <TriggerList triggers={serializedTriggers} />
+      <TriggerList
+        triggers={serializedTriggers}
+        timeZone={profile?.timezone ?? 'America/Sao_Paulo'}
+      />
     </div>
   )
 }

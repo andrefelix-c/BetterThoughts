@@ -92,8 +92,8 @@ export async function createJournalEntry(
           description,
           core_emotion: coreEmotion,
           ai_reflection: reflection as unknown as object,
+          created_at: customCreatedAt ?? new Date(),
           ...(linkedTrigger ? { trigger_id: linkedTrigger.id } : {}),
-          ...(customCreatedAt ? { created_at: customCreatedAt } : {}),
         },
       })
 

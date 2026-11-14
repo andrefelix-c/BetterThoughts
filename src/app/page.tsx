@@ -7,6 +7,7 @@ import type { Entry } from '@prisma/client'
 import JournalForm, { type JournalTriggerPrompt } from '@/components/journal-form'
 import TodayDate from '@/components/today-date'
 import { getEmotionConfig } from '@/lib/emotions'
+import { DEFAULT_TIMEZONE, formatPtBrShortDateTime } from '@/lib/date-time'
 
 type HomeSearchParams = Promise<{
   triggerId?: string | string[]
@@ -29,6 +30,7 @@ async function JournalContent({
   } = await supabase.auth.getUser()
 
   let therapeuticFocus: string | null = null
+  let userTimeZone: string = DEFAULT_TIMEZONE
   let recentEntries: Entry[] = []
   let pendingTriggers: JournalTriggerPrompt[] = []
   let initialSelectedTriggerId: string | null = null
@@ -38,7 +40,7 @@ async function JournalContent({
       const [profile, entries, triggers] = await Promise.all([
         prisma.profile.findUnique({
           where: { id: user.id },
-          select: { therapeutic_focus: true },
+          select: { therapeutic_focus: true, timezone: true },
         }),
         prisma.entry.findMany({
           where: { user_id: user.id },
@@ -57,6 +59,7 @@ async function JournalContent({
       ])
 
       therapeuticFocus = profile?.therapeutic_focus || null
+      userTimeZone = profile?.timezone || DEFAULT_TIMEZONE
       recentEntries = entries
       pendingTriggers = triggers.map((item) => ({
         id: item.id,
@@ -160,12 +163,7 @@ async function JournalContent({
                     </span>
                     <span className="text-[11px] text-[#2F3530]/50">
                       {entry.created_at
-                        ? new Date(entry.created_at).toLocaleDateString('pt-BR', {
-                            day: '2-digit',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })
+                        ? formatPtBrShortDateTime(entry.created_at, userTimeZone)
                         : ''}
                     </span>
                   </div>

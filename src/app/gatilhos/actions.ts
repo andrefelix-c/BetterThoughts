@@ -52,6 +52,7 @@ export async function createTriggerAction(
         title,
         event_time: parsedEventTime,
         is_resolved: false,
+        created_at: new Date(),
       },
     })
 

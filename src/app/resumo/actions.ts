@@ -81,10 +81,10 @@ export async function generateSummaryAction(
       }
     }
 
-    // 2. Busca o foco terapêutico do usuário
+    // 2. Busca o foco terapêutico e o fuso horário do usuário
     const profile = await prisma.profile.findUnique({
       where: { id: user.id },
-      select: { therapeutic_focus: true },
+      select: { therapeutic_focus: true, timezone: true },
     })
 
     // 3. Aciona a OpenAI para produzir o relatório estruturado
@@ -108,6 +108,7 @@ export async function generateSummaryAction(
       therapeuticFocus: profile?.therapeutic_focus || null,
       startDate: startDateStr,
       endDate: endDateStr,
+      timeZone: profile?.timezone ?? null,
     })
 
     const serializedEntries: SummaryEntryItem[] = parsedEntries.map((e) => ({

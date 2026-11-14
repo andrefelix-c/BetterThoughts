@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { faBookOpen } from '@fortawesome/free-solid-svg-icons'
 import HistoryEntryCard from '@/components/history-entry-card'
 import { BUTTON_PRIMARY } from '@/lib/button-styles'
+import { DEFAULT_TIMEZONE } from '@/lib/date-time'
 import FaIcon from '@/components/fa-icon'
 
 async function HistoryContent() {
@@ -24,10 +25,18 @@ async function HistoryContent() {
     )
   }
 
-  const entries = await prisma.entry.findMany({
-    where: { user_id: user.id },
-    orderBy: { created_at: 'desc' },
-  })
+  const [entries, profile] = await Promise.all([
+    prisma.entry.findMany({
+      where: { user_id: user.id },
+      orderBy: { created_at: 'desc' },
+    }),
+    prisma.profile.findUnique({
+      where: { id: user.id },
+      select: { timezone: true },
+    }),
+  ])
+
+  const userTimeZone = profile?.timezone ?? DEFAULT_TIMEZONE
 
   if (entries.length === 0) {
     return (
@@ -66,6 +75,7 @@ async function HistoryContent() {
         {entries.map((entry) => (
           <HistoryEntryCard
             key={entry.id}
+            timeZone={userTimeZone}
             entry={{
               id: entry.id,
               description: entry.description,

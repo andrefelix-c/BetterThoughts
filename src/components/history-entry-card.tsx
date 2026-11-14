@@ -5,6 +5,7 @@ import { faLightbulb, faTrashCan } from '@fortawesome/free-regular-svg-icons'
 import { faChevronRight, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { deleteJournalEntry, saveEntryAnswers } from '@/app/actions'
 import { BUTTON_PRIMARY, BUTTON_SECONDARY } from '@/lib/button-styles'
+import { DEFAULT_TIMEZONE, formatPtBrDateTime } from '@/lib/date-time'
 import { getEmotionConfig } from '@/lib/emotions'
 import FaIcon from './fa-icon'
 
@@ -22,7 +23,13 @@ export interface HistoryEntryProps {
   created_at: Date | string | null
 }
 
-export default function HistoryEntryCard({ entry }: { entry: HistoryEntryProps }) {
+export default function HistoryEntryCard({
+  entry,
+  timeZone = DEFAULT_TIMEZONE,
+}: {
+  entry: HistoryEntryProps
+  timeZone?: string
+}) {
   const [isPendingDelete, startDeleteTransition] = useTransition()
   const [isPendingSave, startSaveTransition] = useTransition()
 
@@ -142,13 +149,7 @@ export default function HistoryEntryCard({ entry }: { entry: HistoryEntryProps }
   const emotion = getEmotionConfig(entry.core_emotion)
 
   const formattedDate = entry.created_at
-    ? new Date(entry.created_at).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+    ? formatPtBrDateTime(entry.created_at, timeZone)
     : 'Data não informada'
 
   const handleDelete = () => {

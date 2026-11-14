@@ -1,3 +1,5 @@
+export const DEFAULT_TIMEZONE = 'America/Sao_Paulo'
+
 export function formatLocalDateTime(d: Date): string {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -36,3 +38,67 @@ export function parseLocalDateTimeWithOffset(
   return isNaN(parsedDate.getTime()) ? null : parsedDate
 }
 
+function formatWithSafeTimeZone(
+  value: Date | string,
+  options: Intl.DateTimeFormatOptions,
+  timeZone?: string | null
+): string {
+  const date = typeof value === 'string' ? new Date(value) : value
+  const tz = timeZone?.trim() || DEFAULT_TIMEZONE
+  try {
+    return date.toLocaleDateString('pt-BR', { ...options, timeZone: tz })
+  } catch {
+    return date.toLocaleDateString('pt-BR', {
+      ...options,
+      timeZone: DEFAULT_TIMEZONE,
+    })
+  }
+}
+
+export function formatPtBrShortDateTime(
+  value: Date | string,
+  timeZone?: string | null
+): string {
+  return formatWithSafeTimeZone(
+    value,
+    {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    },
+    timeZone
+  )
+}
+
+export function formatPtBrDateTime(
+  value: Date | string,
+  timeZone?: string | null
+): string {
+  return formatWithSafeTimeZone(
+    value,
+    {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    },
+    timeZone
+  )
+}
+
+export function formatPtBrDate(
+  value: Date | string,
+  timeZone?: string | null
+): string {
+  return formatWithSafeTimeZone(
+    value,
+    {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    },
+    timeZone
+  )
+}

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { faCalendar, faTrashCan } from '@fortawesome/free-regular-svg-icons'
 import { faCheck, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { deleteTriggerAction, resolveTriggerAction } from '@/app/gatilhos/actions'
+import { DEFAULT_TIMEZONE, formatPtBrShortDateTime } from '@/lib/date-time'
 import FaIcon from './fa-icon'
 
 export interface PendingTriggerItem {
@@ -16,8 +17,10 @@ export interface PendingTriggerItem {
 
 export default function TriggerList({
   triggers,
+  timeZone = DEFAULT_TIMEZONE,
 }: {
   triggers: PendingTriggerItem[]
+  timeZone?: string
 }) {
   const [hiddenIds, setHiddenIds] = useState<string[]>([])
   const [isPending, startTransition] = useTransition()
@@ -63,12 +66,7 @@ export default function TriggerList({
 
       <div className="divide-y divide-[#E2DDD3]">
         {visibleTriggers.map((trigger) => {
-          const formattedDate = new Date(trigger.event_time).toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: 'short',
-            hour: '2-digit',
-            minute: '2-digit',
-          })
+          const formattedDate = formatPtBrShortDateTime(trigger.event_time, timeZone)
 
           return (
             <div

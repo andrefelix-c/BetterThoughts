@@ -1,4 +1,5 @@
 import openai from '@/lib/openai'
+import { formatPtBrDate } from '@/lib/date-time'
 
 export interface SocraticReflection {
   observation?: string
@@ -125,8 +126,9 @@ export async function generateWeeklyReport(params: {
   therapeuticFocus?: string | null
   startDate: string
   endDate: string
+  timeZone?: string | null
 }): Promise<WeeklyReport> {
-  const { entries, therapeuticFocus, startDate, endDate } = params
+  const { entries, therapeuticFocus, startDate, endDate, timeZone } = params
 
   if (!process.env.OPENAI_API_KEY) {
     return {
@@ -200,7 +202,7 @@ ${entries
     }
 
     return `
-[Registro #${idx + 1} - ${e.createdAt ? new Date(e.createdAt).toLocaleDateString('pt-BR') : 'Sem data'}]
+[Registro #${idx + 1} - ${e.createdAt ? formatPtBrDate(e.createdAt, timeZone) : 'Sem data'}]
 - Sentimento Relacionado: ${e.coreEmotion || 'Não informado'}
 - Relato: "${e.description}"
 ${qaBlock ? `- Diálogo Socrático:\n${qaBlock}` : '- Diálogo Socrático: Não gerado'}
