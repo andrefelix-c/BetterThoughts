@@ -1,8 +1,7 @@
-name: Trigger & Check-in Notifications Cron
+name: Trigger & Check-in Notifications (Manual)
 
+# O agendamento automático agora roda via pg_cron + pg_net no Supabase.
 on:
-  schedule:
-    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 jobs:
