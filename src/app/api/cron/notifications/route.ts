@@ -171,13 +171,13 @@ export async function GET(request: NextRequest) {
 
     const msgIndex =
       Math.floor(now.getTime() / (3 * 60 * 60 * 1000)) % CHECKIN_MESSAGES.length
-    const body = CHECKIN_MESSAGES[msgIndex]
+    const message = CHECKIN_MESSAGES[msgIndex]
 
     let deliveredToAny = false
     for (const sub of subs) {
       const res = await sendWebPush(sub, {
-        title: 'BetterThoughts',
-        body,
+        title: message.title,
+        body: message.body,
         url: '/',
         tag: 'checkin-3h',
       })

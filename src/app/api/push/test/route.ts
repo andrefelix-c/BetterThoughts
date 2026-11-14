@@ -30,8 +30,8 @@ export async function POST() {
 
   for (const sub of subscriptions) {
     const res = await sendWebPush(sub, {
-      title: 'BetterThoughts',
-      body: 'Notificação de teste! Tudo certo com seus lembretes neste aparelho.',
+      title: 'Notificação de teste',
+      body: 'Tudo certo com seus lembretes neste aparelho.',
       url: '/gatilhos',
       tag: 'betterthoughts-test',
     })

@@ -7,12 +7,32 @@ export interface PushPayload {
   tag?: string
 }
 
-export const CHECKIN_MESSAGES: string[] = [
-  'Pausa rápida: como você está se sentindo neste momento do dia?',
-  'Como está sua mente agora? Vale registrar algumas linhas no diário.',
-  'O que tem ocupado seus pensamentos nas últimas horas? Anote com calma.',
-  'Check-in de 2 minutos: algo mexeu com você hoje que mereça registro?',
-  'Respire fundo por um instante. Como tem sido o ritmo do seu dia até aqui?',
+export interface CheckinMessage {
+  title: string
+  body: string
+}
+
+export const CHECKIN_MESSAGES: CheckinMessage[] = [
+  {
+    title: 'Como você está agora?',
+    body: 'Pausa rápida: como você está se sentindo neste momento do dia?',
+  },
+  {
+    title: 'Pausa para refletir',
+    body: 'Como está sua mente agora? Vale registrar algumas linhas no diário.',
+  },
+  {
+    title: 'O que tem ocupado sua mente?',
+    body: 'Reserve um instante para anotar com calma os pensamentos das últimas horas.',
+  },
+  {
+    title: 'Check-in de 2 minutos',
+    body: 'Algo mexeu com você hoje que mereça um breve registro?',
+  },
+  {
+    title: 'Respire fundo por um instante',
+    body: 'Como tem sido o ritmo do seu dia e das suas emoções até aqui?',
+  },
 ]
 
 let vapidConfigured = false
